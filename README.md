@@ -113,3 +113,50 @@ time curl --header "Content-Type: application/json" \
   --data '{"username":"xYz","password":"xYz"}' \
   $GALB_IP 
 ```
+
+### set up callout service
+
+```
+kubectl apply -f callout/
+
+gcloud compute health-checks create http callouts-hc \
+  --region=$REGION \
+  --project=$PROJECT \
+  --port=80
+
+gcloud compute backend-services create callout-service \
+  --load-balancing-scheme=EXTERNAL_MANAGED \
+  --protocol=HTTP2 \
+  --port-name=callout-https \
+  --health-checks=callouts-hc \
+  --health-checks-region=$REGION \
+  --project=$PROJECT \
+  --region=$REGION
+
+# adding backend service NEGs - in my setup, zones used are a, c and f
+gcloud compute backend-services add-backend callout-service \
+  --balancing-mode=RATE \
+  --project=$PROJECT \
+  --region=$REGION \
+  --network-endpoint-group=callout-https \
+  --network-endpoint-group-zone=${REGION}-a \
+  --max-rate-per-endpoint=100
+
+gcloud compute backend-services add-backend callout-service \
+  --balancing-mode=RATE \
+  --project=$PROJECT \
+  --region=$REGION \
+  --network-endpoint-group=callout-https \
+  --network-endpoint-group-zone=${REGION}-c \
+  --max-rate-per-endpoint=100
+
+gcloud compute backend-services add-backend callout-service \
+  --balancing-mode=RATE \
+  --project=$PROJECT \
+  --region=$REGION \
+  --network-endpoint-group=callout-https \
+  --network-endpoint-group-zone=${REGION}-f \
+  --max-rate-per-endpoint=100
+
+
+```

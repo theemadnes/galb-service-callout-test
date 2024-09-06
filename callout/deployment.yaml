@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: callout
+  namespace: callout
+  labels:
+    app: callout
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: callout
+  template:
+    metadata:
+      labels:
+        app: callout
+    spec:
+      containers:
+      - name: callout
+        image: us-central1-docker.pkg.dev/e2m-private-test-01/callout-demo/callout-demo@sha256:5c2ee44a1eedeeda3c34e2f8105029ad91f9dc4752d975b0696a6a2f9242c3a3
+        ports:
+        - containerPort: 8080
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+
