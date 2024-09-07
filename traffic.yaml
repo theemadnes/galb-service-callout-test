@@ -1,0 +1,17 @@
+    name: traffic-ext
+    forwardingRules:
+    - https://www.googleapis.com/compute/v1/projects/e2m-private-test-01/regions/us-central1/forwardingRules/l7-xlb-forwarding-rule
+    loadBalancingScheme: EXTERNAL_MANAGED
+    metadata: {"fr": "l7-xlb-forwarding-rule", "key2": {"key3":"value"}}
+    extensionChains:
+    - name: "chain1"
+      matchCondition:
+        celExpression: 'request.host == "example.com"'
+      extensions:
+      - name: 'ext11'
+        authority: ext11.com
+        service: https://www.googleapis.com/compute/v1/projects/e2m-private-test-01/regions/us-central1/backendServices/callout-service
+        failOpen: false
+        timeout: 0.1s
+        supportedEvents:
+        - REQUEST_HEADERS

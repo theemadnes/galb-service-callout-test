@@ -157,6 +157,43 @@ gcloud compute backend-services add-backend callout-service \
   --network-endpoint-group=callout-https \
   --network-endpoint-group-zone=${REGION}-f \
   --max-rate-per-endpoint=100
+```
 
+### configure traffic callout
 
+```
+export PROJECT=e2m-private-test-01 # replace with your own project
+export REGION=us-central1 # replace with your own region
+
+cat >traffic.yaml <<EOF
+    name: traffic-ext
+    forwardingRules:
+    - https://www.googleapis.com/compute/v1/projects/${PROJECT}/regions/${REGION}/forwardingRules/l7-xlb-forwarding-rule
+    loadBalancingScheme: EXTERNAL_MANAGED
+    metadata: {"fr": "l7-xlb-forwarding-rule", "key2": {"key3":"value"}}
+    extensionChains:
+    - name: "chain1"
+      matchCondition:
+        celExpression: 'request.host == "example.com"'
+      extensions:
+      - name: 'ext11'
+        authority: ext11.com
+        service: https://www.googleapis.com/compute/v1/projects/${PROJECT}/regions/${REGION}/backendServices/callout-service
+        failOpen: false
+        timeout: 0.1s
+        supportedEvents:
+        - REQUEST_HEADERS
+EOF
+
+gcloud service-extensions lb-traffic-extensions import traffic-ext \
+    --source=traffic.yaml \
+    --location=$REGION \
+    --project=$PROJECT
+
+# test 
+time curl --header "Content-Type: application/json" \
+  -H "host: example.com" \
+  --request POST \
+  --data '{"username":"xYz","password":"xYz"}' \
+  $GALB_IP 
 ```
